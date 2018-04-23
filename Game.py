@@ -83,10 +83,10 @@ class GameClass:
 game = GameClass()    
 
 game.setGameType(1)
-game.addNewUserToGame("Dino")
-game.addNewUserToGame("Dino1")
+game.addNewUserToGame("User")
+game.addNewUserToGame("User1")
 
-game.takeUserInput("Dino1", "sx", "hello","h****")
+game.takeUserInput("User1", "sx", "hello","h****")
 
 
 # In[ ]:

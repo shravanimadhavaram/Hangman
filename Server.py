@@ -49,7 +49,7 @@ listOfWords = ['battery' , 'jazz' , 'rhinocerous']
 def clientthread(conn, addr):
     toSend = pickle.dumps(["Welcome to this chatroom!\n Type 1 for New User\n Type 2 for Login\n"]) 
     conn.send(toSend)
-    userName = "dino"
+    userName = "user"
     # sends a message to the client whose user object is conn
     #user create or get login
     #send game details, and ask for details
