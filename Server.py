@@ -1,9 +1,4 @@
 
-# coding: utf-8
-
-# In[ ]:
-
-# Python program to implement server side of chat room.
 import socket, pickle
 import select
 import sys
@@ -11,72 +6,89 @@ import random
 import Game
 from thread import *
  
-"""The first argument AF_INET is the address domain of the
-socket. This is used when we have an Internet Domain with
-any two hosts The second argument is the type of socket.
-SOCK_STREAM means that data or characters are read in
-a continuous flow."""
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
  
  
-# takes the first argument from command prompt as IP address
+
 IP_address = '127.0.0.1'
  
-# takes second argument from command prompt as port number
+
 Port = 2222
  
-"""
-binds the server to an entered IP address and at the
-specified port number.
-The client must be aware of these parameters
-"""
+
 server.bind((IP_address, Port))
  
-"""
-listens for 100 active connections. This number can be
-increased as per convenience.
-"""
+
 server.listen(100)
 print "Started server"
 list_of_clients = []
-listOfUsers = {}
+users = []
+userNameMap = {}
 listOfGames = {}
 listOfWords = ['battery' , 'jazz' , 'rhinocerous']
+def intro():
+    while 1:
+        print "List of Users: \n"
+        print users
+        print "List of words: \n"
+        print listOfWords
 
+        listOfWords.append(raw_input("Please add a word: "))
+
+def login(conn):
+    
+    userChoice = conn.recv(1024)
+    
+    if(userChoice == "1"):
+        conn.send("Enter new user name and Password: ")
+        user = pickle.loads(conn.recv(1024))
+        while user[0] in userNameMap:
+            conn.send("User name already taken\nEnter Correct UserName and Password: ")
+            user = pickle.loads(conn.recv(1024))
+        users.append(user[0])
+        userNameMap[user[0]] = user[1]
+        
+    else:
+        conn.send("Enter user name and Password: ")
+        user = pickle.loads(conn.recv(1024))
+        while (not user[0] in userNameMap or userNameMap[user[0]] != user[1]) :
+            conn.send("User name or password is invalid\n Enter Correct username and Password: ")
+            user = conn.recv(1024)
+    conn.send("Cool")
+    conn.recv(1024)
+    return [user[0], user[1]]
+                       
 
 def clientthread(conn, addr):
-    toSend = pickle.dumps(["Welcome to this chatroom!\n Type 1 for New User\n Type 2 for Login\n"]) 
+    toSend = pickle.dumps(["Welcome to this hangman game!\n Type 1 for New User\n Type 2 for Login\n"]) 
     conn.send(toSend)
-    userName = "user"
-    # sends a message to the client whose user object is conn
-    #user create or get login
-    #send game details, and ask for details
+    user = login(conn)
+    
+    userName = user[0]
     if len(listOfGames) == 0:
-        conn.send(pickle.dumps(["No Games are currently being played.. creating a new game"]))
+        conn.send(pickle.dumps(["Login Successful\nNo Games are currently being played.. creating a new game"]))
         message = "1"
     else:
-        conn.send(pickle.dumps(["Type 1 to create new game \nType 2 to join from the list of games\n", "x"]))
+        conn.send(pickle.dumps(["Login Successful\nType 1 to create new game \nType 2 to join from the list of games\n", "x"]))
         message = conn.recv(2048)
-    print message+"\n"
-    #receive what type of game
+    
     if message == "1":
         game = createNewGame(userName, conn)
-        print game.currentWord
     elif message == "2":
-        conn.send(pickle.dumps(self.listOfGames))
+        conn.send(pickle.dumps(listOfGames))
         message = conn.recv(2048)
-        game = self.listOfGames[message]
-        #print "Adding user to the game: \n"
+        game = listOfGames[message]
+        
         game.addNewUserToGame(userName, conn)
+        
     
     temp = conn.recv(1024)
     conn.send(game.currentWord)
     
     while 1:
-        print "In While"
-#         conn.send(game.)
+
         message = conn.recv(2048)
         if message:
             moveResult = game.takeUserInput(userName, message)
@@ -89,23 +101,23 @@ def clientthread(conn, addr):
                 broadcast(reply, 0, game)
                 remove(conn)
                 break
-                    #ByeUser
+
             elif moveResult[3] == 1:
                 reply = ["Not your turn\n"]
                 conn.send(pickle.dumps(reply))
             else:
                 if moveResult[2] == 0:
-                    #Notify user
+
                     reply = ["User "+userName+" got it wrong\n"]
                 else:
-                    #Notify user that he is correct
+
                     reply = ["User "+userName+" got it right\n"]
                 reply.append(game.currentWord)
                 reply.append(game.guessedCharacters)
                 reply.append(game.usersScoreCount)
-#                 reply = [reply, game.currentWord, game.guessedCharacters, game.usersScoreCount]
+
                 broadcast(reply, 0, game)
-                #Broadcast scores, word, 
+                 
         
             
             
@@ -119,16 +131,16 @@ def createNewGame(userName, conn):
     
 def broadcast(message, toRemove, game):
     for clients in game.usersList.values():
-        clients.send(pickle.dumps(message))
+        clients.sendall(pickle.dumps(message))
         if(toRemove):
             remove(clients)
  
 def remove(connection):
     if connection in list_of_clients:
         list_of_clients.remove(connection)
- 
+start_new_thread(intro, ()) 
 while True:
- 
+    print "here"
     conn, addr = server.accept()
  
     list_of_clients.append(conn)

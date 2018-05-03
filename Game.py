@@ -6,22 +6,23 @@
 #!/usr/bin/python
 class GameClass:
     
-    
+    users =[]
     usersList = {}
     usersTurnCount = {}
     usersScoreCount = {}
     guessedCharacters = set()
     totalPlayers = 0
-    current = 0 #whose turn it is
+    current = 0 
     gameType = 1
     currentWord = ''
     
     def __init__(self, word):
         self.word = word
-        self.currentWord = '*'+len(word)
+        self.currentWord = '*'* len(word)
         
     def addNewUserToGame(self, userName, conn):
         self.totalPlayers += 1
+        self.users.append(userName)
         self.usersList[userName] = conn
         self.usersScoreCount[userName]=0
         self.usersTurnCount[userName] = self.gameType
@@ -32,21 +33,21 @@ class GameClass:
             return [1,0,0,0]
         
         if len(inputMessage) != 1 :
+            self.users.remove(userName)
             del self.usersList[userName]
             del self.usersTurnCount[userName]
             del self.usersScoreCount[userName]
             return [0,1,0,0]
         
-        if self.usersList[self.current] != userName:
+        if self.users[self.current] != userName:
+            print self.users[self.current]
             return [0,0,0,1]
             
         stringList = []
-        
-        if self.usersList[self.current] == userName and (not inputMessage in self.guessedCharacters):
-            stringList = list(self.
-                              currentWord)
+        found = 0
+        if (not inputMessage in self.guessedCharacters):
+            stringList = list(self.currentWord)
             index = 0
-            found = 0
             for letter in self.word :
                 if letter == inputMessage :
                     stringList[index] = letter
@@ -54,13 +55,13 @@ class GameClass:
                     self.usersScoreCount[userName] +=1
                 index += 1
             if not found :
-                currentCount = self.usersTurnCount[userName]
-                currentCount-=1
-                if currentCount == 0:
+                currentTurns = self.usersTurnCount[userName]
+                currentTurns-=1
+                if currentTurns == 0:
                     self.current = (self.current+1)%(self.totalPlayers)
-                    currentCount = self.gameType
-                self.usersTurnCount[userName] = currentCount
-                self.currentWord = ''.join(stringList)
+                    currentTurns = self.gameType
+                self.usersTurnCount[userName] = currentTurns
+            self.currentWord = ''.join(stringList)
             
         self.guessedCharacters.add(inputMessage)
         print 'score' + str(self.usersScoreCount[userName])
@@ -78,18 +79,5 @@ class GameClass:
     def getCurrentWord(self):
         return self.currentWord
     
-    
-
-game = GameClass()    
-
-game.setGameType(1)
-game.addNewUserToGame("User")
-game.addNewUserToGame("User1")
-
-game.takeUserInput("User1", "sx", "hello","h****")
-
-
-# In[ ]:
-
 
 
